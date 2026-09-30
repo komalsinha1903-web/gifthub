@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   // Favicon aur Browser Icons (Next.js default hatane ke liye)
   icons: {
     icon: [
-      { url: '/favicon.ico' },
+      { url: '/icon.svg' },
       { url: '/icon.svg', type: 'image/svg' },
     ],
     shortcut: '/favicon.ico',
