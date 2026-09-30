@@ -13,7 +13,7 @@ export default function GlobalLoading() {
           Loading
         </span>
         <span className="text-[10px] text-zinc-600 font-mono mt-0.5 block">
-          Synchronizing ledger...
+          Synchronizing...
         </span>
       </div>
     </div>

@@ -1,9 +1,58 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
+// Railway live URL 
+const siteUrl = 'https://gifthub.up.railway.app';
+
 export const metadata: Metadata = {
-  title: 'GiftHub',
-  description: 'Digital gift cards & luxury store',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'GiftHub | Digital Gift Cards & Luxury Store',
+    template: '%s | GiftHub',
+  },
+  description: 'Digital gift cards & luxury store. Buy Apple Gift cards, Amazon gift cards Luxury watches, Fine Jewellery and instant gifts seamlessly.',
+  keywords: ['GiftHub', 'Gift Cards', 'Luxury Store', 'Digital Cards', 'Shopping'],
+
+  // Favicon aur Browser Icons (Next.js default hatane ke liye)
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.svg', type: 'image/svg' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/icon.svg',
+  },
+  
+  // WhatsApp, Facebook, LinkedIn previews
+  openGraph: {
+    title: 'GiftHub | Digital Gift Cards & Luxury Store',
+    description: 'Digital gift cards & luxury store. Buy Apple Gift cards, Amazon gift cards Luxury watches, Fine Jewellery and instant gifts seamlessly.',
+    url: siteUrl,
+    siteName: 'GiftHub',
+    images: [
+      {
+        url: '/og-image.png', // public/og-image.png me image save karein
+        width: 1200,
+        height: 630,
+        alt: 'GiftHub Preview Banner',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+
+  // Twitter / X preview card
+  twitter: {
+    card: 'summary_large_image',
+    title: 'GiftHub | Digital Gift Cards & Luxury Store',
+    description: 'Digital gift cards & luxury store. Buy Apple Gift cards, Amazon gift cards Luxury watches, Fine Jewellery and instant gifts seamlessly.',
+    images: ['/og-image.png'],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
