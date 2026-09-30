@@ -79,7 +79,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               {/* Card 1: Apple Gift Card */}
               <div className="lg:col-span-3 rounded-2xl bg-gradient-to-br from-[#8ba3e8] via-[#a890d3] to-[#e4a4b8] p-6 text-white flex flex-col justify-between shadow-sm min-h-[300px]">
                 <Link
-                  href='products?category=apple_gift_cards'
+                  href='/products'
                   className="w-full aspect-[4/3] rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6 cursor-pointer hover:scale-105 transition-transform"
                 >
                   <img
@@ -92,7 +92,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <h3 className="text-xl font-bold text-white">Apple Gift Cards</h3>
                   <p className="text-[11px] text-white/90 font-light">Apps • Music • iCloud • Hardware</p>
                   <Link
-                     href='products?category=apple_gift_cards'
+                     href='/products'
                     className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-white hover:bg-zinc-100 text-zinc-900 rounded-full font-bold text-xs transition"
                   >
                     <span>Shop Apple</span>
@@ -104,7 +104,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               {/* Card 2: Amazon Gift Card */}
               <div className="lg:col-span-3 rounded-2xl bg-gradient-to-br from-[#0c1829] to-[#08101a] p-6 text-white flex flex-col justify-between shadow-sm min-h-[300px]">
                 <Link
-                    href='products?category=amazon_gift_cards'
+                    href='/products'
                   className="w-full aspect-[4/3] rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-center mb-6 cursor-pointer hover:scale-105 transition-transform"
                 >
                    <img
@@ -117,7 +117,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <h3 className="text-xl font-bold text-white">Amazon Gift Cards</h3>
                   <p className="text-[11px] text-zinc-400 font-light">Millions of items storewide</p>
                   <Link
-                     href='products?category=amazon_gift_cards'
+                     href='/products'
                     className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-white hover:bg-zinc-100 text-zinc-900 rounded-full font-bold text-xs transition"
                   >
                     <span>Shop Amazon</span>
@@ -129,7 +129,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               {/* Card 3: Luxury Watches */}
               <div className="lg:col-span-3 rounded-2xl bg-[#090b10] border border-zinc-800 p-6 text-white flex flex-col justify-between shadow-sm min-h-[300px]">
                 <Link
-                  href='products?category=luxury_watches'
+                  href='/products'
                   className="w-full aspect-[4/3] rounded-xl bg-zinc-950 flex items-center justify-center mb-6 overflow-hidden cursor-pointer hover:scale-105 transition-transform"
                 >
                   <img
@@ -142,7 +142,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <h3 className="text-xl font-bold text-white">Luxury Watches</h3>
                   <p className="text-[11px] text-zinc-400 font-light">Rolex • Omega • Certified</p>
                   <Link
-                  href='products?category=luxury_watches'
+                  href='/products'
                     className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-white hover:bg-zinc-100 text-zinc-900 rounded-full font-bold text-xs transition"
                   >
                     <span>Shop Watches</span>

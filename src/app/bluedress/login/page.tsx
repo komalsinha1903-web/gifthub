@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
 
       if (data?.session) {
         // Successful login, direct to Admin Orders Dashboard
-        router.push('/admin/orders');
+        router.push('//bluedress/orders');
         router.refresh();
       }
     } catch (err: any) {

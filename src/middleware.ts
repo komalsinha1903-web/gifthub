@@ -53,10 +53,10 @@ export async function middleware(request: NextRequest) {
     role = profile?.role || null;
   }
 
-  // 1. /admin/login page check
-  if (pathname === '/admin/login') {
+  // 1. /bluedress/login page check
+  if (pathname === '/bluedress/login') {
     if (user && role === 'admin') {
-      return NextResponse.redirect(new URL('/admin/orders', request.url));
+      return NextResponse.redirect(new URL('/bluedress/orders', request.url));
     }
     return response;
   }
@@ -64,7 +64,7 @@ export async function middleware(request: NextRequest) {
   // 2. Protected /admin routes check
   if (pathname.startsWith('/admin')) {
     if (!user) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+      return NextResponse.redirect(new URL('/bluedress/login', request.url));
     }
 
     // Dynamic role check: agar role admin nahi hai toh bahar karo
@@ -84,5 +84,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/dashboard/:path*'],
+  matcher: ['/bluedress/:path*', '/dashboard/:path*'],
 };

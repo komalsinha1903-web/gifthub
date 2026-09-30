@@ -6,7 +6,7 @@ import { Package, Users, DollarSign, ListOrdered, ArrowLeft } from 'lucide-react
 
 const links = [
   { name: 'Products', href: '/admin/products', icon: Package },
-  { name: 'Customer Orders', href: '/admin/orders', icon: ListOrdered },
+  { name: 'Customer Orders', href: '//bluedress/orders', icon: ListOrdered },
   { name: 'Crypto Wallets & QRs', href: '/admin/payments', icon: DollarSign },
   { name: 'Customers', href: '/admin/customers', icon: Users },
 ];

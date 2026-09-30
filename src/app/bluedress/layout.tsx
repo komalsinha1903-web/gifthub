@@ -17,8 +17,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
 
-  // 👉 Agar /admin/login page par ho toh Sidebar aur Header render mat karo
-  if (pathname === '/admin/login') {
+  // 👉 Agar /bluedress/
+  if (pathname === '/bluedress/login') {
     return (
       <div className="min-h-screen bg-[#070a12] text-zinc-100 flex items-center justify-center font-sans selection:bg-amber-500 selection:text-black">
         {children}
@@ -33,28 +33,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.push('/admin/login');
+    router.push('/bluedress/login');
   };
 
   const navItems = [
     {
       label: 'Dashboard',
-      href: '/admin',
+      href: '/bluedress',
       icon: LayoutDashboard,
     },
     {
       label: 'Customer Orders',
-      href: '/admin/orders',
+      href: '/bluedress/orders',
       icon: ShoppingBag,
     },
     {
       label: 'Products Management',
-      href: '/admin/products',
+      href: '/bluedress/products',
       icon: Package,
     },
     {
       label: 'Crypto Wallets & QR',
-      href: '/admin/wallets',
+      href: '/bluedress/wallets',
       icon: QrCode,
     },
   ];
@@ -91,7 +91,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(`${item.href}/`));
+              const isActive = pathname === item.href || (item.href !== '/bluedress' && pathname.startsWith(`${item.href}/`));
 
               return (
                 <Link
