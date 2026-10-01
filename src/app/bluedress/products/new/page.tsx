@@ -246,7 +246,7 @@ export default function AddNewProductPage() {
       if (error) throw error;
 
       alert(`Product "${data.title}" successfully added to GiftHub.`);
-      router.push('/admin/products');
+      router.push('/bluedress/products');
       router.refresh();
     } catch (err: any) {
       console.error('Product insertion error:', err);
@@ -270,7 +270,7 @@ export default function AddNewProductPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-zinc-800 gap-4">
         <div>
           <Link
-            href="/admin/products"
+            href="/bluedress/products"
             className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition font-mono mb-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -849,7 +849,7 @@ export default function AddNewProductPage() {
         {/* Action Buttons */}
         <div className="pt-4 flex items-center justify-end gap-4">
           <Link
-            href="/admin/products"
+            href="/bluedress/products"
             className="px-6 py-4 rounded-2xl border border-zinc-800 text-xs font-mono font-bold text-zinc-400 hover:text-white transition"
           >
             Cancel

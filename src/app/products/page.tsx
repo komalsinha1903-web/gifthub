@@ -30,10 +30,10 @@ export default async function ProductsCatalogPage({ searchParams }: ProductsPage
     }
   );
 
-  // Sirf required columns mangwayein (select('*') se 4x fast)
+  // Added `slug` so ProductCard can link to clean URLs
   let query = supabase
     .from('products')
-    .select('id, title, description, price, discount_percentage, image_url, category, badge, stock_status');
+    .select('id, slug, title, description, price, discount_percentage, image_url, category, badge, stock_status');
 
   if (activeCategory) {
     if (activeCategory === 'gift_cards') {

@@ -25,3 +25,5 @@ export const createServerSupabaseClient = async () => {
     }
   );
 };
+
+export { createServerClient };

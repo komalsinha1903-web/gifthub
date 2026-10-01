@@ -1,16 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { Plus, Trash2, Pencil, X } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, Search, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { ProductStockSelector } from '@/components/admin/ProductStockSelector';
 
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+  category: string;
+  image_url?: string;
+  description?: string;
+  stock_status?: string;
+  created_at?: string;
+}
+
+const CACHE_KEY = 'admin_products_cache';
+
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [, startTransition] = useTransition();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -21,32 +37,71 @@ export default function AdminProductsPage() {
     stock_status: 'in_stock',
   });
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  // Single persistent client instance
+  const supabase = useMemo(
+    () =>
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      ),
+    []
   );
 
-  const fetchProducts = async () => {
-    try {
+  const fetchProducts = async (isBackground = false) => {
+    if (!isBackground && products.length === 0) {
       setLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+
+    try {
+      // Lean payload: select only columns needed for the catalog
       const { data, error } = await supabase
         .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('id, title, price, category, image_url, description, stock_status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) {
         console.error('Fetch products error:', error.message);
       } else if (data) {
-        setProducts(data);
+        setProducts(data as Product[]);
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        } catch {}
       }
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    // 1. Instant hydration from cache
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProducts(parsed);
+          setLoading(false);
+        }
+      }
+    } catch {}
+
+    // 2. Fetch fresh data in background
+    fetchProducts(true);
   }, []);
+
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return products;
+    const q = searchQuery.toLowerCase();
+    return products.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        (p.category && p.category.toLowerCase().includes(q))
+    );
+  }, [products, searchQuery]);
 
   const handleOpenAdd = () => {
     setEditingProduct(null);
@@ -61,7 +116,7 @@ export default function AdminProductsPage() {
     setShowModal(true);
   };
 
-  const handleOpenEdit = (p: any) => {
+  const handleOpenEdit = (p: Product) => {
     setEditingProduct(p);
     setFormData({
       title: p.title,
@@ -76,47 +131,73 @@ export default function AdminProductsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to remove this product?')) return;
+
+    // Optimistic UI removal
+    const previous = [...products];
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+
     const { error } = await supabase.from('products').delete().eq('id', id);
-    if (!error) {
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+    if (error) {
+      alert('Delete failed: ' + error.message);
+      setProducts(previous);
+    } else {
+      try {
+        sessionStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify(previous.filter((p) => p.id !== id))
+        );
+      } catch {}
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
-      title: formData.title,
-      price: parseFloat(formData.price),
+      title: formData.title.trim(),
+      price: parseFloat(formData.price) || 0,
       category: formData.category,
-      image_url: formData.image_url,
-      description: formData.description,
+      image_url: formData.image_url.trim(),
+      description: formData.description.trim(),
       stock_status: formData.stock_status,
     };
 
     if (editingProduct) {
+      // Optimistic update
+      const updatedList = products.map((p) =>
+        p.id === editingProduct.id ? { ...p, ...payload } : p
+      );
+      setProducts(updatedList);
+      setShowModal(false);
+
       const { error } = await supabase
         .from('products')
         .update(payload)
         .eq('id', editingProduct.id);
 
-      if (!error) {
-        setProducts((prev) =>
-          prev.map((p) =>
-            p.id === editingProduct.id ? { ...p, ...payload } : p
-          )
-        );
-        setShowModal(false);
+      if (error) {
+        alert('Update failed: ' + error.message);
+        fetchProducts(true);
+      } else {
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify(updatedList));
+        } catch {}
       }
     } else {
+      setShowModal(false);
       const { data, error } = await supabase
         .from('products')
         .insert(payload)
         .select()
         .single();
 
-      if (!error && data) {
-        setProducts([data, ...products]);
-        setShowModal(false);
+      if (error) {
+        alert('Creation failed: ' + error.message);
+      } else if (data) {
+        const newList = [data as Product, ...products];
+        setProducts(newList);
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify(newList));
+        } catch {}
       }
     }
   };
@@ -124,15 +205,21 @@ export default function AdminProductsPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-800 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            Products Management
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-white tracking-tight">
+              Products Management
+            </h1>
+            {isRefreshing && (
+              <RefreshCw className="w-3.5 h-3.5 text-zinc-500 animate-spin" />
+            )}
+          </div>
           <p className="text-xs text-zinc-400 mt-1">
-            Add, update inventory availability, or delete items from catalog.
+            Add, update inventory availability, or delete items from catalog ({products.length} loaded).
           </p>
         </div>
+
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -143,12 +230,26 @@ export default function AdminProductsPage() {
             <span>Quick Add</span>
           </button>
           <Link
-            href="/admin/products/new"
+            href="/bluedress/products/new"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#f5a600] hover:bg-[#d99200] text-black font-extrabold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Full Form Page</span>
           </Link>
+        </div>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <input
+            type="text"
+            placeholder="Search products by title or category..."
+            value={searchQuery}
+            onChange={(e) => startTransition(() => setSearchQuery(e.target.value))}
+            className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700"
+          />
         </div>
       </div>
 
@@ -165,7 +266,7 @@ export default function AdminProductsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-900">
-            {products.map((p) => (
+            {filteredProducts.map((p) => (
               <tr key={p.id} className="hover:bg-zinc-900/30 transition">
                 {/* Item Details */}
                 <td className="py-4 px-6">
@@ -176,6 +277,7 @@ export default function AdminProductsPage() {
                         'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=100&q=80'
                       }
                       alt={p.title}
+                      loading="lazy"
                       className="w-10 h-10 rounded-lg object-contain bg-zinc-900 p-1 border border-zinc-800 shrink-0"
                     />
                     <div>
@@ -201,7 +303,7 @@ export default function AdminProductsPage() {
                 <td className="py-4 px-6">
                   <ProductStockSelector
                     productId={p.id}
-                    currentStatus={p.stock_status || 'in_stock'}
+                    currentStatus={(p.stock_status || 'in_stock') as any}
                     onStatusChange={(newStatus) => {
                       setProducts((prev) =>
                         prev.map((item) =>
@@ -225,7 +327,7 @@ export default function AdminProductsPage() {
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
                   <Link
-                    href={`/admin/products/${p.id}/edit`}
+                    href={`/bluedress/products/${p.id}/edit`}
                     className="inline-flex p-2 bg-zinc-900 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition"
                     title="Full Edit Page"
                   >
@@ -248,6 +350,12 @@ export default function AdminProductsPage() {
         {loading && (
           <div className="py-12 flex justify-center items-center">
             <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+
+        {!loading && filteredProducts.length === 0 && (
+          <div className="py-12 text-center text-xs text-zinc-500 font-mono">
+            No products found matching your filter.
           </div>
         )}
       </div>
@@ -311,7 +419,6 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Stock Status Selector in Modal */}
               <div>
                 <label className="block text-zinc-400 mb-1">Initial Stock Status</label>
                 <select

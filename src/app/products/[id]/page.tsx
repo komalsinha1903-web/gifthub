@@ -8,17 +8,31 @@ interface ProductPageProps {
   params: Promise<{ id: string }>;
 }
 
-export const dynamic = 'force-dynamic';
+// 60-second ISR for fast loads
+export const revalidate = 60;
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
 
-  const { data: product, error } = await supabase
+  // Check if param is a valid 36-character UUID format
+  const isUUID =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+  let query = supabase
     .from('products')
-    .select('*')
-    .eq('id', id)
-    .single();
+    .select(
+      'id, title, slug, price, discount_percentage, category, denominations, variants, images, image_url, description, stock'
+    );
+
+  // If it's a UUID, check id or slug; if it's text, ONLY query the slug column
+  if (isUUID) {
+    query = query.or(`id.eq.${id},slug.eq.${id}`);
+  } else {
+    query = query.eq('slug', id);
+  }
+
+  const { data: product, error } = await query.maybeSingle();
 
   if (error || !product) {
     notFound();
@@ -27,7 +41,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   // 1. Check if product is a watch
   const isWatch = product.category === 'luxury_watches';
 
-  // 2. Denominations sirf gift cards ke liye banegi, watches ke liye hamesha empty rahegi
+  // 2. Denominations parsing
   let parsedDenominations: { card_value: number; selling_price: number }[] = [];
 
   if (!isWatch) {
@@ -41,14 +55,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       }
     }
 
-    // Fallback sirf tab chalega jab product watch NA ho
     if (
       parsedDenominations.length === 0 &&
-      Array.isArray(product.variants?.sizes) &&
-      product.variants.sizes.length > 0
+      Array.isArray((product.variants as any)?.sizes) &&
+      (product.variants as any).sizes.length > 0
     ) {
       const discount = Number(product.discount_percentage) || 0;
-      parsedDenominations = product.variants.sizes.map((s: string) => {
+      parsedDenominations = (product.variants as any).sizes.map((s: string) => {
         const val = parseFloat(s.replace(/[^0-9.]/g, '')) || Number(product.price);
         const sell = discount > 0 ? Number((val * (1 - discount / 100)).toFixed(2)) : val;
         return { card_value: val, selling_price: sell };
